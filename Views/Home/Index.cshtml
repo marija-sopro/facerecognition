@@ -1,0 +1,85 @@
+﻿@model ImageModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Upload image</p>
+    @using (Html.BeginForm("UploadImage", "Home", FormMethod.Post, new { @id = "uploadImage", enctype = "multipart/form-data", @class = "form-horizontal", role = "form" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-group row">
+            <div class="col-sm-6 offset-sm-3">
+                <input id="imageUpload" asp-for="Image" class="file-input form-control" accept="image/*">
+                <label class="position-relative p-2" for="customFile">
+                    <img class="img-fluid uploadedImage" src="" alt="">
+                </label>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-sm-6 offset-sm-3">
+                <button class="btn btn-primary" id="submit">Submit</button>
+            </div>
+        </div>
+
+        <div id="result" class="d-flex flex-column"></div>
+    }
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+        $('#uploadedImage').hide();
+
+        $(".file-input").on("change", function () {
+            var file = this.files[0];
+            var url = URL.createObjectURL(file);
+            $(".uploadedImage").attr("src", url);
+            $('#uploadedImage').show();
+        });
+
+         $('#uploadImage').submit(function (event) {
+            event.preventDefault();
+            $('#result').html('');
+
+            if (document.forms[0] == null) {
+                alert('Upload a file');
+            }
+
+            $.ajax({
+                url: '@Url.Action("UploadImage", "Home")',
+                data: new FormData(document.forms[0]),
+                contentType: false,
+                processData: false,
+                type: 'post',
+                success: function (res) {
+                    debugger;
+                    if (res.success) {
+                        if (res.result != null) {
+                            res.result.forEach(el => {
+                                var h3 = document.createElement("h3");
+                                h3.innerText = el.name + ': ' + el.value.toFixed(4);
+                                var div = document.getElementById("result")
+                                div.appendChild(h3);
+                            });
+                        }
+                    }
+                    else {
+                        $('#result').html(res);
+                    }
+                }
+            });
+        });
+   });
+    </script>
+}
+
+<style type="text/css">
+    .img-fluid {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
